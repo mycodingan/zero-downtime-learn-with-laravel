@@ -7,7 +7,7 @@
     <!-- Header Page -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Tambah Produk Baru</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Tambah Produk Baru sekarang</h1>
             <p class="text-sm text-gray-500 mt-1">Isi formulir di bawah ini untuk menambahkan data produk.</p>
         </div>
         <a href="{{ route('products.index') }}" class="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
