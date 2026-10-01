@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Step untuk mengambil kode dari repository ke dalam workflow
+        uses: actions/checkout@v4  # Step untuk mengambil kode dari repository ke dalam workflow
 
       - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
+        uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Menggunakan kunci SSH dari Secrets di GitHub untuk akses ke server
 
