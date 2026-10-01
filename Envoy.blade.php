@@ -18,6 +18,7 @@
     generate_app_key
     handle_storage_directory
     run_migrations
+    simulate_failure
     run_optimize
     update_symlinks
     delete_git_metadata
@@ -95,6 +96,11 @@
     cd {{ $new_release_dir }}
     php artisan migrate --force
 @endtask
+@taks('simulate_failure')
+    {{-- Simulasi kegagalan untuk pengujian rollback --}}
+    echo 'Simulating failure for testing rollback'
+    false
+@endtask
 
 @task('run_optimize')
     {{-- Menjalankan perintah optimasi untuk membersihkan cache dan mempercepat aplikasi --}}
@@ -146,4 +152,63 @@
     {{-- Merestart service PHP-FPM agar rilis baru langsung aktif --}}
     echo 'Restarting php8.3-fpm'
     sudo systemctl restart php8.3-fpm
+@endtask
+
+<!-- rollback -->
+@task('rollback')
+    echo "Starting rollback process"
+    cd {{ $app_dir }}
+
+    # Cek apakah ada symlink current
+    if [ ! -L {{ $app_dir }}/current ]; then
+        echo "No current release found. Rollback aborted."
+        exit 1
+    fi
+
+    # Ambil rilis saat ini
+    current_release=$(readlink -f {{ $app_dir }}/current)
+    echo "Current release: $(basename $current_release)"
+
+    # Ambil rilis sebelumnya
+    previous_release=$(ls -dt {{ $releases_dir }}/* | sed -n '2p')
+
+    if [ -z "$previous_release" ]; then
+        echo "No previous release found. Rollback aborted."
+        exit 1
+    fi
+
+    echo "Rolling back to: $(basename $previous_release)"
+
+    # Hapus symlink current
+    rm {{ $app_dir }}/current
+
+    # Buat symlink ke rilis sebelumnya
+    ln -s $previous_release {{ $app_dir }}/current
+
+    # Pindah ke rilis sebelumnya
+    cd $previous_release
+
+    # Bersihkan cache
+    echo "Clearing application cache"
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan view:clear
+
+    # Restart PHP-FPM
+    echo "Restarting PHP-FPM"
+    sudo systemctl restart php8.3-fpm
+
+    # Ambil rilis terakhir
+    latest_release=$(ls -dt {{ $releases_dir }}/* | head -n 1)
+    echo "Latest release failed: $(basename $latest_release)"
+
+    if [ -z "$latest_release" ]; then
+        echo "No latest release found. Rollback aborted."
+        exit 1
+    fi
+
+    echo "Removing failed release"
+    rm -rf $latest_release
+
+    echo "Rollback completed successfully"
 @endtask
