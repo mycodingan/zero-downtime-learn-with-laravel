@@ -3,40 +3,40 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - main
+      - main  # Branch yang digunakan untuk deployment setiap kali ada push ke main branch
 
   pull_request:
     branches:
-      - main
+      - main  # Deployment juga akan dijalankan saat ada pull request ke branch main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Menjalankan job di environment Ubuntu versi terbaru
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Step untuk mengambil kode dari repository ke dalam workflow
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Menggunakan kunci SSH dari Secrets di GitHub untuk akses ke server
 
       - name: Add Host Key to known_hosts
         run: |
           mkdir -p ~/.ssh  # Membuat folder .ssh jika belum ada
-          ssh-keyscan -H 202.10.47.149 >> ~/.ssh/known_hosts  # Menambahkan kunci host server ke dalam known_hosts agar koneksi SSH aman
+          ssh-keyscan -H 202.10.47.149 >> ~/.ssh/known_hosts
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.3'  # Menginstal versi PHP 8.3 di environment untuk menjalankan perintah PHP dan composer
 
       - name: Install Composer Dependencies
         run: composer install --optimize-autoloader --no-dev --no-progress --no-interaction --prefer-dist
-
+        # Menginstal dependensi Composer tanpa dev dependencies dan mengoptimalkan autoload untuk performa yang lebih baik
 
       - name: Run Envoy Deployment
         run: |
           composer global require laravel/envoy  # Menginstal Laravel Envoy secara global
-          ~/.composer/vendor/bin/envoy run deploy --commit="${{ github.sha }}"  # Menjalankan Envoy untuk deployment dengan commit SHA saat ini
+          ~/.composer/vendor/bin/envoy run deploy --commit="${{ github.sha }}"
