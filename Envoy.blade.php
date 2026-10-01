@@ -18,7 +18,6 @@
     generate_app_key
     handle_storage_directory
     run_migrations
-    simulate_failure
     run_optimize
     update_symlinks
     delete_git_metadata
@@ -95,11 +94,6 @@
     echo 'Running migrations'
     cd {{ $new_release_dir }}
     php artisan migrate --force
-@endtask
-@taks('simulate_failure')
-    {{-- Simulasi kegagalan untuk pengujian rollback --}}
-    echo 'Simulating failure for testing rollback'
-    false
 @endtask
 
 @task('run_optimize')
