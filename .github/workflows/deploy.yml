@@ -1,0 +1,42 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add Host Key to known_hosts
+        run: |
+          mkdir -p ~/.ssh  # Membuat folder .ssh jika belum ada
+          ssh-keyscan -H 202.10.47.149 >> ~/.ssh/known_hosts  # Menambahkan kunci host server ke dalam known_hosts agar koneksi SSH aman
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Composer Dependencies
+        run: composer install --optimize-autoloader --no-dev --no-progress --no-interaction --prefer-dist
+
+
+      - name: Run Envoy Deployment
+        run: |
+          composer global require laravel/envoy  # Menginstal Laravel Envoy secara global
+          ~/.composer/vendor/bin/envoy run deploy --commit="${{ github.sha }}"  # Menjalankan Envoy untuk deployment dengan commit SHA saat ini
